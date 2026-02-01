@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription Vendeur - MiadMarket</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #F97924;
+            --primary-hover-color: #E86A14;
+            --surface-color: #FFFFFF;
+            --background-color: #F8F9FA;
+            --text-color-primary: #212529;
+            --text-color-secondary: #6C757D;
+            --border-color: #DEE2E6;
+            --error-color: #DC3545;
+            --success-color: #198754;
+            --font-family: 'Inter', sans-serif;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: var(--font-family);
+            background-color: var(--background-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            margin:0;
+        }
+        .auth-container {
+            width: 100%;
+            max-width: 450px;
+            background: var(--surface-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            border: 1px solid var(--border-color);
+        }
+        .auth-header {
+            text-align: center;
+            padding: 2.5rem 2rem 1rem;
+        }
+        .auth-header img {
+            height: 50px;
+            margin-bottom: 1rem;
+        }
+        .auth-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        .auth-content { padding: 2rem; }
+        .form-grid { display: grid; gap: 1.25rem; }
+        .form-group { display: flex; flex-direction: column; }
+        label { margin-bottom: 0.5rem; font-weight: 500; font-size: 0.875rem; }
+        input, select {
+            padding: 0.85rem 1rem;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(249, 121, 36, 0.25);
+        }
+        button[type="submit"] {
+            width: 100%;
+            padding: 0.85rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-top: 1.5rem;
+            transition: background-color 0.2s;
+        }
+        button[type="submit"]:hover { background-color: var(--primary-hover-color); }
+        .auth-footer {
+            text-align: center;
+            padding: 1.5rem;
+            background: #F8F9FA;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+        .auth-footer a { color: var(--primary-color); font-weight: 600; text-decoration: none; }
+        .auth-footer a:hover { text-decoration: underline; }
+        .message-box {
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            display: none;
+        }
+        .error-message { color: var(--error-color); background-color: rgba(220, 53, 69, 0.1); border: 1px solid rgba(220, 53, 69, 0.2); }
+        .success-message { color: var(--success-color); background-color: rgba(25, 135, 84, 0.1); border: 1px solid rgba(25, 135, 84, 0.2); }
+        .loader {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.8); z-index: 9999;
+            justify-content: center; align-items: center;
+        }
+        .loader.active { display: flex; }
+        .loader-spinner {
+            border: 5px solid #f3f3f3; border-top: 5px solid var(--primary-color);
+            border-radius: 50%; width: 50px; height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-header">
+            <a href="index.html"><img src="https://miadmarket.com/wp-content/uploads/2023/10/logo-miad-market.png" alt="Logo MiadMarket"></a>
+            <h1>Créer un Compte Vendeur</h1>
+        </div>
+
+        <div class="auth-content">
+            <div id="messageBox" class="message-box"></div>
+            <form id="signupForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="signupNomVendeur">Nom du vendeur</label>
+                        <input type="text" id="signupNomVendeur" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPays">Pays</label>
+                        <select id="signupPays" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupEmail">Email</label>
+                        <input type="email" id="signupEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">Mot de passe</label>
+                        <input type="password" id="signupPassword" required>
+                    </div>
+                </div>
+                <button type="submit">Créer mon compte</button>
+            </form>
+        </div>
+
+        <div class="auth-footer">
+            Déjà un compte ? <a href="login-vendeur.html">Connectez-vous</a>
+        </div>
+    </div>
+
+    <div class="loader" id="loader"><div class="loader-spinner"></div></div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_2DvE-Cu3_WIQRC5LCu7SQ06jKstggFhnJE9f9JXQp-IFyrFlkaioGs0h6Kc0KH0KDQ/exec";
+        const LOADER = document.getElementById('loader');
+        const MESSAGE_BOX = document.getElementById('messageBox');
+        
+        const africanCountries = ["Algérie", "Angola", "Bénin", "Botswana", "Burkina Faso", "Burundi", "Cabo Verde", "Cameroun", "République centrafricaine", "Tchad", "Comores", "Congo (Congo-Brazzaville)", "Côte d'Ivoire", "Djibouti", "Égypte", "Guinée équatoriale", "Érythrée", "Eswatini", "Éthiopie", "Gabon", "Gambie", "Ghana", "Guinée", "Guinée-Bissau", "Kenya", "Lesotho", "Liberia", "Libye", "Madagascar", "Malawi", "Mali", "Mauritanie", "Maurice", "Maroc", "Mozambique", "Namibie", "Niger", "Nigeria", "République Démocratique du Congo", "Rwanda", "Sao Tomé-et-Principe", "Sénégal", "Seychelles", "Sierra Leone", "Somalie", "Afrique du Sud", "Soudan du Sud", "Soudan", "Tanzanie", "Togo", "Tunisie", "Ouganda", "Zambie", "Zimbabwe"];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const selectPays = document.getElementById('signupPays');
+            africanCountries.forEach(country => {
+                selectPays.add(new Option(country, country));
+            });
+            document.getElementById('signupForm').addEventListener('submit', handleSignup);
+        });
+
+        async function postToApi(action, payload) {
+            showLoader(true);
+            hideMessage();
+            try {
+                const request = { action, payload, token: null };
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(request),
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+                if (result.status === 'error') throw new Error(result.message);
+                return result;
+            } catch (error) {
+                showMessage(error.message, 'error');
+                throw error;
+            } finally {
+                showLoader(false);
+            }
+        }
+        
+        async function handleSignup(e) {
+            e.preventDefault();
+            const payload = {
+                nomVendeur: document.getElementById('signupNomVendeur').value,
+                pays: document.getElementById('signupPays').value,
+                email: document.getElementById('signupEmail').value,
+                password: document.getElementById('signupPassword').value,
+            };
+
+            try {
+                const result = await postToApi('registerRepresentative', payload);
+                document.getElementById('signupForm').style.display = 'none';
+                showMessage(result.message + " Vous pouvez maintenant vous connecter.", 'success');
+            } catch (error) {
+                // L'erreur est déjà gérée par postToApi
+            }
+        }
+
+        function showLoader(show) {
+            LOADER.classList.toggle('active', show);
+        }
+
+        function showMessage(message, type = 'error') {
+            MESSAGE_BOX.textContent = message;
+            MESSAGE_BOX.className = `message-box ${type}-message`;
+            MESSAGE_BOX.style.display = 'block';
+        }
+
+        function hideMessage() {
+            MESSAGE_BOX.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

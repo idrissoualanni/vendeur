@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace Admin - MiadMarket</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #F97924; --primary-hover-color: #E86A14; --surface-color: #FFFFFF;
+            --background-color: #F8F9FA; --text-color-primary: #212529; --text-color-secondary: #6C757D;
+            --border-color: #DEE2E6; --font-family: 'Inter', sans-serif; --border-radius: 8px;
+            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        body { font-family: var(--font-family); background-color: var(--background-color); color: var(--text-color-primary); margin: 0; }
+        .main-container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+        header {
+            display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem;
+            background-color: var(--surface-color); border: 1px solid var(--border-color);
+            border-radius: var(--border-radius); box-shadow: var(--box-shadow); margin-bottom: 1.5rem;
+        }
+        header .logo-container img { height: 40px; }
+        header h1 { font-size: 1.25rem; font-weight: 600; margin: 0 0 0 1rem; }
+        #logout-btn { background: none; border: none; color: var(--primary-color); font-weight: 600; cursor: pointer; font-size: 0.9rem; margin-left: 1rem; }
+        .content-card {
+            background: var(--surface-color); padding: 2rem; border: 1px solid var(--border-color);
+            border-radius: var(--border-radius); box-shadow: var(--box-shadow); margin-bottom: 1.5rem;
+        }
+        h2 { margin: 0 0 1.5rem 0; font-weight: 600; font-size: 1.5rem; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 0.85rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+        th { background-color: #F8F9FA; font-weight: 600; color: var(--text-color-secondary); text-transform: uppercase; font-size: 0.75rem; }
+        td img { height: 40px; width: 40px; object-fit: cover; border-radius: 4px; }
+        .loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.8); z-index: 9999; justify-content: center; align-items: center; }
+        .loader.active { display: flex; }
+        .loader-spinner { border: 5px solid #f3f3f3; border-top: 5px solid var(--primary-color); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <header>
+            <div style="display: flex; align-items: center;">
+                <img src="https://miadmarket.com/wp-content/uploads/2023/10/logo-miad-market.png" alt="Logo MiadMarket">
+                <h1>Tableau de Bord Administrateur</h1>
+            </div>
+            <div>
+                <span id="user-info"></span>
+                <button id="logout-btn">Déconnexion</button>
+            </div>
+        </header>
+
+        <div class="content-card">
+            <h2>Liste des Vendeurs</h2>
+            <div class="table-wrapper">
+                <table id="vendorTable">
+                    <thead><tr><th>Nom Vendeur</th><th>Pays</th><th>Créé Par</th><th>ID Vendeur</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h2>Liste de tous les Produits</h2>
+            <div class="table-wrapper">
+                <table id="productTable">
+                    <thead><tr><th>Image</th><th>Nom</th><th>Vendeur</th><th>SKU</th><th>Type</th><th>Catégories</th><th>Statut</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="loader" id="loader"><div class="loader-spinner"></div></div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_2DvE-Cu3_WIQRC5LCu7SQ06jKstggFhnJE9f9JXQp-IFyrFlkaioGs0h6Kc0KH0KDQ/exec";
+        const LOADER = document.getElementById('loader');
+
+        const appState = { token: null, user: null };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            appState.token = sessionStorage.getItem('authToken');
+            const userJson = sessionStorage.getItem('authUser');
+
+            if (!appState.token || !userJson) {
+                return handleAuthError("Accès non autorisé.");
+            }
+
+            try {
+                appState.user = JSON.parse(userJson);
+                if (appState.user.role !== 'Administrateur' && appState.user.role !== 'Informaticien') {
+                    return handleAuthError("Accès réservé aux administrateurs.");
+                }
+                initializeAppUI();
+            } catch (e) {
+                handleAuthError("Erreur de session.");
+            }
+        });
+
+        function initializeAppUI() {
+            document.getElementById('user-info').textContent = appState.user.email;
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                sessionStorage.clear();
+                window.location.href = 'index.html';
+            });
+            loadAdminData();
+        }
+
+        async function postToApi(action, payload = {}) {
+            showLoader(true);
+            try {
+                const request = { action, payload, token: appState.token };
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST', body: JSON.stringify(request), mode: 'cors',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+                if (result.status === 'error') {
+                    if (result.message.includes("Token invalide")) handleAuthError(result.message);
+                    throw new Error(result.message);
+                }
+                return result;
+            } catch (error) {
+                alert(`Erreur: ${error.message}`);
+                throw error;
+            } finally {
+                showLoader(false);
+            }
+        }
+
+        async function loadAdminData() {
+            try {
+                const data = await postToApi('getDashboardData');
+                renderVendorTable(data.vendors || []);
+                renderProductTable(data.products || [], data.vendors || []);
+            } catch (error) {
+                console.error("Impossible de charger les données.", error);
+            }
+        }
+
+        function renderVendorTable(vendors) {
+            const tbody = document.getElementById('vendorTable').querySelector('tbody');
+            tbody.innerHTML = '';
+            if (vendors.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Aucun vendeur inscrit.</td></tr>';
+                return;
+            }
+            vendors.forEach(v => {
+                tbody.insertRow().innerHTML = `
+                    <td>${v.NomVendeur || 'N/A'}</td><td>${v.Pays || 'N/A'}</td>
+                    <td>${v.CrééParEmail || 'N/A'}</td><td>${v.VendeurID || 'N/A'}</td>
+                `;
+            });
+        }
+
+        function renderProductTable(products, vendors) {
+            const tbody = document.getElementById('productTable').querySelector('tbody');
+            const vendorsMap = new Map(vendors.map(v => [v.VendeurID, v.NomVendeur]));
+            tbody.innerHTML = '';
+            if (products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Aucun produit trouvé.</td></tr>';
+                return;
+            }
+            products.forEach(p => {
+                tbody.insertRow().innerHTML = `
+                    <td><img src="${p.ImageURL || 'https://via.placeholder.com/150'}" alt="${p.NomProduit}"></td>
+                    <td>${p.NomProduit}</td>
+                    <td>${vendorsMap.get(p.VendeurID) || 'Inconnu'}</td>
+                    <td>${p.SKU || 'N/A'}</td><td>${p.Type}</td>
+                    <td>${p.Catégories || 'N/A'}</td><td>${p.StatutRécupération}</td>
+                `;
+            });
+        }
+
+        function handleAuthError(message) {
+            alert(message);
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        function showLoader(show) { LOADER.classList.toggle('active', show); }
+    </script>
+</body>
+</html>
