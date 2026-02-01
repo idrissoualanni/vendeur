@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Vendeurs & Produits</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #F97316; /* Orange-500 */
+            --primary-hover-color: #EA580C; /* Orange-600 */
+            --secondary-color: #F3F4F6; /* Gray-100 */
+            --surface-color: #FFFFFF;
+            --text-color-primary: #1F2937; /* Gray-800 */
+            --text-color-secondary: #6B7280; /* Gray-500 */
+            --border-color: #E5E7EB; /* Gray-200 */
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --border-radius: 8px;
+            --box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: var(--font-family);
+            background-color: var(--secondary-color);
+            color: var(--text-color-primary);
+            margin: 0;
+            padding: 2.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background: var(--surface-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        header, .form-section, .display-section {
+            padding: 2rem;
+        }
+        header {
+            background: var(--surface-color);
+            color: var(--text-color-primary);
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        h1 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.75rem;
+        }
+        h2 {
+            margin: 0 0 1.5rem 0;
+            font-weight: 600;
+            font-size: 1.25rem;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: var(--text-color-secondary);
+        }
+        input, select, button, textarea {
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
+            font-family: var(--font-family);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.3);
+        }
+        input[type="file"] {
+            padding: 0.6rem 1rem;
+        }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-weight: 600;
+        }
+        button:hover {
+            background-color: var(--primary-hover-color);
+        }
+        #btn-export {
+            background-color: #10B981; /* Emerald-500 */
+        }
+        #btn-export:hover {
+            background-color: #059669; /* Emerald-600 */
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            align-items: flex-end;
+        }
+        .controls .form-group {
+            flex-grow: 1;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.85rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        th {
+            background-color: #F9FAFB; /* Gray-50 */
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-color-secondary);
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover {
+            background-color: #F9FAFB;
+        }
+        td {
+            font-size: 0.875rem;
+        }
+        td a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        td a:hover {
+            text-decoration: underline;
+        }
+        .loader {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        .loader.active {
+            display: flex;
+        }
+        .loader-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="main-container" class="container">
+        <header>
+            <h1>Gestion des Vendeurs et Produits</h1>
+        </header>
+
+        <section class="form-section">
+            <h2>Ajouter un Produit</h2>
+            <form id="productForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="vendorSelect">Vendeur</label>
+                        <select id="vendorSelect" name="vendeurId" required></select>
+                    </div>
+                     <div class="form-group hidden" id="newVendorFields">
+                        <label for="NomVendeur">Nom du nouveau vendeur</label>
+                        <input type="text" id="NomVendeur" name="NomVendeur">
+                        <label for="PaysAfricain" style="margin-top:10px;">Pays</label>
+                        <select id="PaysAfricain" name="PaysAfricain"></select>
+                         <label for="WooCommerceInfo" style="margin-top:10px;">Infos WooCommerce</label>
+                        <input type="text" id="WooCommerceInfo" name="WooCommerceInfo" placeholder="Ex: Clé API, boutique ID...">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="NomProduit">Nom du Produit</label>
+                        <input type="text" id="NomProduit" name="nomProduit" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="SKU">SKU</label>
+                        <input type="text" id="SKU" name="sku" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="Type">Type de Produit</label>
+                        <select id="Type" name="type" required>
+                            <option value="simple">Simple</option>
+                            <option value="variable">Variable</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="Categories">Catégories</label>
+                        <input type="text" id="Categories" name="categories" placeholder="Ex: T-shirt, Homme">
+                    </div>
+                    <div class="form-group">
+                        <label for="Image">Image du produit</label>
+                        <input type="file" id="Image" name="Image">
+                    </div>
+                </div>
+
+                <div id="variable-fields" class="hidden form-grid">
+                    <div class="form-group">
+                        <label for="Attributs">Attributs (format JSON)</label>
+                        <textarea id="Attributs" name="attributs" rows="4" placeholder='[{"nom":"Couleur", "valeurs":"Bleu, Vert"},{"nom":"Taille", "valeurs":"S, M"}]'></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="Variations">Variations (format JSON)</label>
+                        <textarea id="Variations" name="variations" rows="4" placeholder='[{"combinaison":{"Couleur":"Bleu","Taille":"S"}, "prix": 20, "sku_variation":"SKU-BL-S"}]'></textarea>
+                    </div>
+                </div>
+
+                <br>
+                <button type="submit">Ajouter le Produit</button>
+            </form>
+        </section>
+
+        <section class="display-section">
+            <h2>Liste des Produits</h2>
+            <div class="controls">
+                <div class="form-group">
+                    <label for="vendorFilter">Filtrer par vendeur</label>
+                    <select id="vendorFilter">
+                        <option value="all">Tous les vendeurs</option>
+                    </select>
+                </div>
+                <button id="btn-export">Exporter en CSV (sélection)</button>
+            </div>
+            <div class="table-wrapper">
+                <table id="productTable">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAllCheckbox"></th>
+                            <th>ID Produit</th>
+                            <th>Nom Produit</th>
+                            <th>SKU</th>
+                            <th>Vendeur</th>
+                            <th>Pays</th>
+                            <th>Statut Récupération</th>
+                            <th>Image</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Les lignes de produits seront insérées ici par JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <div class="loader" id="loader">
+        <div class="loader-spinner"></div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_2DvE-Cu3_WIQRC5LCu7SQ06jKstggFhnJE9f9JXQp-IFyrFlkaioGs0h6Kc0KH0KDQ/exec";
+        const LOADER = document.getElementById('loader');
+
+        const appState = {
+            token: null,
+            user: null,
+            products: [],
+            vendors: []
+        };
+
+        const africanCountries = ["Algérie", "Angola", "Bénin", "Botswana", "Burkina Faso", "Burundi", "Cabo Verde", "Cameroun", "République centrafricaine", "Tchad", "Comores", "Congo (Congo-Brazzaville)", "Côte d'Ivoire", "Djibouti", "Égypte", "Guinée équatoriale", "Érythrée", "Eswatini", "Éthiopie", "Gabon", "Gambie", "Ghana", "Guinée", "Guinée-Bissau", "Kenya", "Lesotho", "Liberia", "Libye", "Madagascar", "Malawi", "Mali", "Mauritanie", "Maurice", "Maroc", "Mozambique", "Namibie", "Niger", "Nigeria", "République Démocratique du Congo", "Rwanda", "Sao Tomé-et-Principe", "Sénégal", "Seychelles", "Sierra Leone", "Somalie", "Afrique du Sud", "Soudan du Sud", "Soudan", "Tanzanie", "Togo", "Tunisie", "Ouganda", "Zambie", "Zimbabwe"];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            appState.token = sessionStorage.getItem('authToken');
+            const userJson = sessionStorage.getItem('authUser');
+
+            if (!appState.token || !userJson) {
+                alert("Accès non autorisé. Veuillez vous connecter.");
+                window.location.href = 'index.html';
+                return;
+            }
+
+            try {
+                appState.user = JSON.parse(userJson);
+                initializeApp();
+            } catch (e) {
+                alert("Erreur de session. Veuillez vous reconnecter.");
+                sessionStorage.clear();
+                window.location.href = 'index.html';
+            }
+        });
+
+        async function postToApi(action, payload) {
+            showLoader(true);
+            try {
+                const request = { action, payload, token: appState.token };
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(request),
+                    mode: 'cors'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erreur réseau: ${response.statusText}`);
+                }
+                
+                const resultText = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(resultText);
+                } catch (e) {
+                    console.error("Invalid JSON response:", resultText);
+                    throw new Error("Le serveur a renvoyé une réponse inattendue.");
+                }
+
+                if (result.status === 'error') {
+                    throw new Error(result.message);
+                }
+                return result;
+
+            } finally {
+                showLoader(false);
+            }
+        }
+
+        function initializeApp() {
+            populateCountries();
+            loadDashboardData();
+            
+            document.getElementById('productForm').addEventListener('submit', handleFormSubmit);
+            document.getElementById('vendorFilter').addEventListener('change', () => renderProducts(appState.products));
+            document.getElementById('vendorSelect').addEventListener('change', handleVendorSelectChange);
+            document.getElementById('selectAllCheckbox').addEventListener('change', handleSelectAll);
+            document.getElementById('Type').addEventListener('change', (e) => {
+                document.getElementById('variable-fields').classList.toggle('hidden', e.target.value !== 'variable');
+            });
+            
+            // Masquer les éléments non pertinents pour le rôle
+            if (appState.user.role === 'Représentant') {
+                 document.getElementById('vendorSelect').parentElement.classList.add('hidden');
+            }
+        }
+
+        function populateCountries() {
+            const select = document.getElementById('PaysAfricain');
+            if(select.options.length > 1) return;
+            africanCountries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country;
+                option.textContent = country;
+                select.appendChild(option);
+            });
+        }
+        
+        async function loadDashboardData() {
+            try {
+                const data = await postToApi('getDashboardData', {});
+                appState.vendors = data.vendors;
+                appState.products = data.products;
+                
+                populateVendorSelects(data.vendors);
+                renderProducts(data.products);
+            } catch (error) {
+                console.error("Erreur lors du chargement des données:", error);
+                alert(`Erreur: ${error.message}`);
+            }
+        }
+        
+        function populateVendorSelects(vendors) {
+            const vendorSelect = document.getElementById('vendorSelect');
+            const vendorFilter = document.getElementById('vendorFilter');
+
+            vendorSelect.innerHTML = '';
+            vendorFilter.innerHTML = '<option value="all">Tous les vendeurs</option>';
+            
+            vendors.forEach(vendor => {
+                const option = document.createElement('option');
+                option.value = vendor.VendeurID;
+                option.textContent = `${vendor.NomVendeur} (${vendor.Pays})`;
+                vendorSelect.appendChild(option.cloneNode(true));
+                vendorFilter.appendChild(option);
+            });
+            
+            /* NOTE: La création d'un nouveau vendeur directement depuis ce formulaire a été désactivée
+             * car l'API `addProduct` ne le supporte pas. Pour l'implémenter, il faudrait une logique
+             * dédiée (par ex. une modale) qui utilise l'action `registerRepresentative` du backend.
+             if (appState.user.role !== 'Représentant') {
+                const addOption = document.createElement('option');
+                addOption.value = "new";
+                addOption.textContent = "Ajouter un nouveau vendeur...";
+                vendorSelect.appendChild(addOption);
+             }
+            */
+        }
+
+        function renderProducts(allProducts) {
+            const vendorId = document.getElementById('vendorFilter').value;
+            const filteredProducts = (vendorId === 'all') 
+                ? allProducts 
+                : allProducts.filter(p => p.VendeurID === vendorId);
+
+            const tbody = document.getElementById('productTable').querySelector('tbody');
+            tbody.innerHTML = '';
+
+            if (filteredProducts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Aucun produit à afficher.</td></tr>';
+                return;
+            }
+            
+            const vendorsMap = new Map(appState.vendors.map(v => [v.VendeurID, v]));
+
+            filteredProducts.forEach(p => {
+                const vendor = vendorsMap.get(p.VendeurID) || {};
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="checkbox" class="product-checkbox" value="${p.ProduitID}"></td>
+                    <td>${p.ProduitID}</td>
+                    <td>${p.NomProduit}</td>
+                    <td>${p.SKU}</td>
+                    <td>${vendor.NomVendeur || 'N/A'}</td>
+                    <td>${vendor.Pays || 'N/A'}</td>
+                    <td>${p.StatutRécupération}</td>
+                    <td>${p.ImageURL ? `<a href="${p.ImageURL}" target="_blank">Voir</a>` : 'N/A'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function handleVendorSelectChange() {
+            const select = document.getElementById('vendorSelect');
+            const newVendorFields = document.getElementById('newVendorFields');
+            const isNew = select.value === 'new';
+            newVendorFields.classList.toggle('hidden', !isNew);
+            document.getElementById('NomVendeur').required = isNew;
+            document.getElementById('PaysAfricain').required = isNew;
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            const fileInput = document.getElementById('Image');
+            
+            let payload = Object.fromEntries(formData.entries());
+
+            if (appState.user.role === 'Représentant') {
+                payload.vendeurId = appState.user.vendeurId;
+            }
+
+            if (payload.type === 'variable') {
+                try {
+                    if (payload.attributs) payload.attributs = JSON.parse(payload.attributs);
+                    if (payload.variations) payload.variations = JSON.parse(payload.variations);
+                } catch(err) {
+                    alert('Le format JSON pour les attributs ou variations est invalide.');
+                    console.error("JSON Parse Error:", err);
+                    return; // Stop submission
+                }
+            }
+            
+            try {
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const reader = new FileReader();
+                    payload.imageFile = await new Promise((resolve, reject) => {
+                        reader.onload = () => {
+                            const parts = reader.result.split(',');
+                            resolve({ base64: parts[1], type: file.type, name: file.name });
+                        };
+                        reader.onerror = error => reject(error);
+                        reader.readAsDataURL(file);
+                    });
+                }
+                
+                await postToApi('addProduct', payload);
+                
+                alert("Produit ajouté avec succès ! La liste va se rafraîchir.");
+                form.reset();
+                handleVendorSelectChange();
+                loadDashboardData();
+
+            } catch (error) {
+                console.error("Erreur lors de l'ajout du produit:", error);
+                alert(`Une erreur est survenue: ${error.message}`);
+            }
+        }
+        
+        function handleSelectAll(e) {
+            const checkboxes = document.querySelectorAll('.product-checkbox');
+            checkboxes.forEach(checkbox => checkbox.checked = e.target.checked);
+        }
+
+        function showLoader(show) {
+            LOADER.classList.toggle('active', show);
+        }
+
+        document.getElementById('btn-export').classList.add('hidden');
+
+    </script>
+</body>
+</html>
