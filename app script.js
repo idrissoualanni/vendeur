@@ -117,6 +117,18 @@ function doPost(e) {
 }
 
 /**
+ * Gère les requêtes "preflight" envoyées par les navigateurs pour la vérification CORS.
+ * C'est essentiel pour permettre à une application web externe (comme celle sur Vercel)
+ * d'appeler cette API.
+ */
+function doOptions(e) {
+  return ContentService.createTextOutput()
+    .setHeader('Access-Control-Allow-Origin', '*') // Permet à n'importe quel domaine d'appeler l'API
+    .setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+    .setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
+/**
  * =================================================================
  * FONCTIONS D'AUTHENTIFICATION
  * =================================================================

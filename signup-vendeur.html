@@ -113,6 +113,15 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 480px) {
+            .auth-header {
+                padding: 2rem 1.5rem 1rem;
+            }
+            .auth-content {
+                padding: 1.5rem;
+            }
+        }
     </style>
 </head>
 <body>
