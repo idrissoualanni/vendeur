@@ -317,7 +317,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.googleusercontent.com/macros/echo?user_content_k"; // <--- REMPLACEZ CECI
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_2DvE-Cu3_WIQRC5LCu7SQ06jKstggFhnJE9f9JXQp-IFyrFlkaioGs0h6Kc0KH0KDQ/exec"; // <--- REMPLACEZ CECI
         const LOADER = document.getElementById('loader');
 
         const appState = {
@@ -343,7 +343,6 @@
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify(request),
-                    headers: { 'Content-Type': 'application/json' },
                     mode: 'cors' 
                 });
 
@@ -351,7 +350,14 @@
                     throw new Error(`Erreur réseau: ${response.statusText}`);
                 }
                 
-                const result = await response.json();
+                const resultText = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(resultText);
+                } catch (e) {
+                    console.error("Invalid JSON response:", resultText);
+                    throw new Error("Le serveur a renvoyé une réponse inattendue.");
+                }
 
                 if (result.status === 'error') {
                     throw new Error(result.message);
