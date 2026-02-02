@@ -6,6 +6,11 @@
  *  - L'inscription et la connexion des vendeurs.
  *  - L'ajout de produits par les vendeurs.
  *  - Un tableau de bord pour l'administrateur pour voir tous les utilisateurs et produits.
+ *
+ *  CORRECTIONS APPORTÉES :
+ *  - Ajout des en-têtes CORS (`Access-Control-Allow-Origin`, etc.) à toutes les réponses.
+ *  - Implémentation d'une fonction `doOptions` pour gérer les requêtes "preflight".
+ *  - Correction d'une faute de frappe dans `Access-Control-Allow-Headers`.
  */
 
 // --- CONFIGURATION ---
@@ -77,12 +82,13 @@ function initialSetup() {
  */
 
 // L'URL de votre application frontend. Seules les requêtes provenant de ce domaine seront autorisées.
+// Pour les tests locaux, vous pouvez temporairement utiliser '*' mais c'est moins sécurisé.
 const ALLOWED_ORIGIN = 'https://vendeur-theta.vercel.app';
 
 /**
  * Gère les requêtes "preflight" (OPTIONS) du navigateur.
- * Le navigateur envoie une requête OPTIONS avant la requête POST réelle pour vérifier
- * si le serveur autorise la communication. C'est la première étape de la validation CORS.
+ * Le navigateur envoie cette requête avant les requêtes POST complexes (ex: avec Content-Type: application/json)
+ * pour vérifier si le serveur autorise la communication. C'est la clé de la validation CORS.
  */
 function doOptions(e) {
   return ContentService.createTextOutput()
@@ -92,11 +98,13 @@ function doOptions(e) {
 }
 
 /**
- * Gère les requêtes GET. Utile pour vérifier si l'API est en ligne.
- * Chaque réponse GET inclut aussi les en-têtes CORS.
+ * Gère les requêtes GET. Utile pour un simple "ping" afin de vérifier si l'API est en ligne.
+ * Chaque réponse GET inclut aussi les en-têtes CORS pour être cohérent.
  */
 function doGet(e) {
     const response = { status: 'success', message: 'API en ligne. Utilisez POST pour les actions.' };
+    
+    // On retourne une réponse JSON avec les en-têtes CORS.
     return ContentService.createTextOutput(JSON.stringify(response))
         .setMimeType(ContentService.MimeType.JSON)
         .setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN)
@@ -108,34 +116,38 @@ function doGet(e) {
  * Gère les requêtes POST contenant les données (ex: login, addProduct).
  * C'est le point d'entrée principal de l'API.
  * IMPORTANT : La réponse à cette requête DOIT également contenir les en-têtes CORS
- * pour que le navigateur autorise le code JavaScript à lire le résultat.
+ * pour que le navigateur autorise le code JavaScript du frontend à lire le résultat.
  */
 function doPost(e) {
   let response;
   try {
+    // On analyse le corps de la requête POST qui est au format JSON.
     const request = JSON.parse(e.postData.contents);
     const { action, payload, token } = request;
 
-    // Les actions 'login' et 'signup' sont autorisées sans token
+    // Les actions 'login' et 'signup' sont publiques et n'ont pas besoin de token.
     if (action === 'login') {
       response = login(payload);
     } else if (action === 'signup') {
       response = signup(payload);
     }
     else {
-      // Toutes les autres actions nécessitent une authentification
+      // Toutes les autres actions nécessitent une authentification par token.
       const user = getAuthenticatedUser(token);
-      if (!user) throw new Error("Accès non autorisé. Token invalide ou expiré.");
+      if (!user) {
+        throw new Error("Accès non autorisé. Token invalide ou expiré.");
+      }
 
+      // On redirige vers la bonne fonction en fonction de l'action demandée.
       switch (action) {
-        case 'getDashboardData': // Devrait être sécurisé
-           if(user.role !== ROLES.ADMIN) throw new Error("Accès refusé.");
+        case 'getDashboardData': // Sécurisé pour l'admin
+           if(user.role !== ROLES.ADMIN) throw new Error("Accès refusé. Seul l'administrateur peut accéder à ces données.");
            response = getAdminDashboard();
            break;
-        case 'addProduct':
+        case 'addProduct': // Sécurisé pour le vendeur
           response = addProduct(payload, user);
           break;
-        case 'getSellerProducts':
+        case 'getSellerProducts': // Sécurisé pour le vendeur
            response = getSellerProducts(user);
            break;
         default:
@@ -143,16 +155,17 @@ function doPost(e) {
       }
     }
   } catch (error) {
-    // Gestion centralisée des erreurs
+    // Gestion centralisée des erreurs pour renvoyer un message clair au frontend.
     response = { status: 'error', message: error.message };
   }
 
-  // On retourne la réponse au format JSON avec les en-têtes CORS.
+  // On retourne la réponse finale au format JSON avec les en-têtes CORS.
+  // La correction de la typo 'Access-control-Allow-Headers' en 'Access-Control-Allow-Headers' est cruciale.
   return ContentService.createTextOutput(JSON.stringify(response))
     .setMimeType(ContentService.MimeType.JSON)
     .setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN)
     .setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-    .setHeader('Access-control-Allow-Headers', 'Content-Type');
+    .setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
 /**
@@ -194,14 +207,14 @@ function login(payload) {
   const userSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEETS.USERS);
   const data = userSheet.getDataRange().getValues();
 
-  // On cherche l'utilisateur dans la feuille (on ignore les en-têtes)
+  // On cherche l'utilisateur dans la feuille (on ignore les en-têtes à la ligne 1)
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     // row[1] est l'email, row[2] est le mot de passe
     if (row[1].toLowerCase() === email.toLowerCase() && row[2] === password) {
       const token = `token_${Utilities.getUuid()}`;
-      // On stocke le nouveau token dans la feuille
-      userSheet.getRange(i + 1, 5).setValue(token); // Colonne 'Token'
+      // On stocke le nouveau token dans la feuille (colonne 5 = 'E')
+      userSheet.getRange(i + 1, 5).setValue(token);
 
       return {
         status: 'success',
@@ -215,20 +228,21 @@ function login(payload) {
     }
   }
 
-  // Si on ne trouve pas l'utilisateur
+  // Si on ne trouve pas l'utilisateur après avoir parcouru toute la feuille
   throw new Error("Email ou mot de passe incorrect.");
 }
 
 /**
  * Vérifie si un token est valide et retourne les informations de l'utilisateur.
- * @param {string} token - Le token d'authentification.
- * @returns {object|null} - L'objet utilisateur ou null.
+ * @param {string} token - Le token d'authentification envoyé par le frontend.
+ * @returns {object|null} - L'objet utilisateur (id, email, role) ou null si le token est invalide.
  */
 function getAuthenticatedUser(token) {
   if (!token) return null;
   const userSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEETS.USERS);
   const data = userSheet.getDataRange().getValues();
 
+  // On cherche le token dans la colonne 5 ('E')
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     if (row[4] === token) { // Colonne 'Token'
@@ -239,7 +253,7 @@ function getAuthenticatedUser(token) {
       };
     }
   }
-  return null;
+  return null; // Token non trouvé
 }
 
 
@@ -261,7 +275,7 @@ function addProduct(payload, user) {
   }
 
   let imageUrl = '';
-  // Si une image est fournie, on l'upload sur Google Drive
+  // Si une image est fournie, on l'uploade sur Google Drive et on récupère son URL.
   if (imageFile && imageFile.base64) {
     imageUrl = uploadFileToDrive(imageFile.base64, imageFile.name, imageFile.type);
   }
@@ -296,7 +310,7 @@ function getAdminDashboard() {
   const users = getSheetDataAsObject(SHEETS.USERS);
   const products = getSheetDataAsObject(SHEETS.PRODUCTS);
 
-  // On retire les mots de passe et tokens avant de les renvoyer
+  // On ne renvoie jamais les mots de passe ou les tokens au client.
   const sanitizedUsers = users.map(u => ({
     UserID: u.UserID,
     Email: u.Email,
@@ -314,16 +328,16 @@ function getAdminDashboard() {
  */
 
 /**
- * Convertit les données d'une feuille en un tableau d'objets.
- * @param {string} sheetName - Le nom de la feuille.
- * @returns {Array<object>}
+ * Convertit les données d'une feuille de calcul en un tableau d'objets (JSON).
+ * @param {string} sheetName - Le nom de la feuille à lire.
+ * @returns {Array<object>} - Un tableau où chaque objet représente une ligne.
  */
 function getSheetDataAsObject(sheetName) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
-  if (!sheet || sheet.getLastRow() < 2) return [];
+  if (!sheet || sheet.getLastRow() < 2) return []; // Retourne un tableau vide si la feuille est vide ou n'existe pas
 
   const data = sheet.getDataRange().getValues();
-  const headers = data.shift();
+  const headers = data.shift(); // La première ligne contient les en-têtes
   
   return data.map(row => {
     const obj = {};
@@ -335,20 +349,21 @@ function getSheetDataAsObject(sheetName) {
 }
 
 /**
- * Uploade un fichier sur Google Drive et retourne son URL publique.
- * @param {string} base64Data - Les données du fichier en base64.
- * @param {string} fileName - Le nom du fichier.
- * @param {string} mimeType - Le type MIME du fichier.
+ * Uploade un fichier sur Google Drive et retourne son URL partageable.
+ * @param {string} base64Data - Les données du fichier encodées en base64.
+ * @param {string} fileName - Le nom du fichier à créer.
+ * @param {string} mimeType - Le type MIME du fichier (ex: 'image/jpeg').
  */
 function uploadFileToDrive(base64Data, fileName, mimeType) {
   const decoded = Utilities.base64Decode(base64Data);
   const blob = Utilities.newBlob(decoded, mimeType, `img_${new Date().getTime()}_${fileName}`);
   
-  // On crée le fichier à la racine du Drive
+  // Crée le fichier dans le dossier racine du Drive de l'utilisateur.
   const file = DriveApp.getRootFolder().createFile(blob);
 
-  // On rend le fichier visible par tous ceux qui ont le lien
+  // Rend le fichier accessible à toute personne disposant du lien.
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   
+  // Retourne l'URL pour l'afficher dans le frontend.
   return file.getUrl();
 }
