@@ -70,10 +70,45 @@ function initialSetup() {
 
 /**
  * =================================================================
- * GESTION DES REQUÊTES HTTP (API)
+ * GESTION DES REQUÊTES HTTP (API) - CORRIGÉ POUR CORS
  * =================================================================
- * C'est le point d'entrée principal de notre API.
- * Toutes les requêtes de l'application front-end arriveront ici.
+ * Ce bloc gère toutes les requêtes entrantes et inclut la logique
+ * pour résoudre les erreurs CORS entre Vercel et Google Apps Script.
+ */
+
+// L'URL de votre application frontend. Seules les requêtes provenant de ce domaine seront autorisées.
+const ALLOWED_ORIGIN = 'https://vendeur-theta.vercel.app';
+
+/**
+ * Gère les requêtes "preflight" (OPTIONS) du navigateur.
+ * Le navigateur envoie une requête OPTIONS avant la requête POST réelle pour vérifier
+ * si le serveur autorise la communication. C'est la première étape de la validation CORS.
+ */
+function doOptions(e) {
+  return ContentService.createTextOutput()
+    .setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN)
+    .setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+    .setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
+/**
+ * Gère les requêtes GET. Utile pour vérifier si l'API est en ligne.
+ * Chaque réponse GET inclut aussi les en-têtes CORS.
+ */
+function doGet(e) {
+    const response = { status: 'success', message: 'API en ligne. Utilisez POST pour les actions.' };
+    return ContentService.createTextOutput(JSON.stringify(response))
+        .setMimeType(ContentService.MimeType.JSON)
+        .setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN)
+        .setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        .setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
+/**
+ * Gère les requêtes POST contenant les données (ex: login, addProduct).
+ * C'est le point d'entrée principal de l'API.
+ * IMPORTANT : La réponse à cette requête DOIT également contenir les en-têtes CORS
+ * pour que le navigateur autorise le code JavaScript à lire le résultat.
  */
 function doPost(e) {
   let response;
@@ -81,12 +116,11 @@ function doPost(e) {
     const request = JSON.parse(e.postData.contents);
     const { action, payload, token } = request;
 
-    // Les actions 'login' et 'registerRepresentative' sont autorisées sans token
+    // Les actions 'login' et 'signup' sont autorisées sans token
     if (action === 'login') {
-      response = loginUser(payload.email, payload.password);
-    } else if (action === 'registerRepresentative') {
-      // On rend cette action publique pour l'auto-inscription des vendeurs
-      response = registerRepresentative(payload, 'Self-Registered'); // L'email du créateur n'est pas pertinent ici
+      response = login(payload);
+    } else if (action === 'signup') {
+      response = signup(payload);
     }
     else {
       // Toutes les autres actions nécessitent une authentification
@@ -94,14 +128,16 @@ function doPost(e) {
       if (!user) throw new Error("Accès non autorisé. Token invalide ou expiré.");
 
       switch (action) {
-        case 'getDashboardData':
-          response = getDashboardData(user);
-          break;
-        // La logique de 'registerRepresentative' a été déplacée pour être publique
+        case 'getDashboardData': // Devrait être sécurisé
+           if(user.role !== ROLES.ADMIN) throw new Error("Accès refusé.");
+           response = getAdminDashboard();
+           break;
         case 'addProduct':
           response = addProduct(payload, user);
           break;
-        // Ajoutez d'autres actions ici (ex: 'updateProductStatus', 'getVendorsList', etc.)
+        case 'getSellerProducts':
+           response = getSellerProducts(user);
+           break;
         default:
           throw new Error(`Action "${action}" non reconnue.`);
       }
@@ -111,21 +147,12 @@ function doPost(e) {
     response = { status: 'error', message: error.message };
   }
 
-  // On retourne la réponse au format JSON.
+  // On retourne la réponse au format JSON avec les en-têtes CORS.
   return ContentService.createTextOutput(JSON.stringify(response))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-/**
- * Gère les requêtes "preflight" envoyées par les navigateurs pour la vérification CORS.
- * C'est essentiel pour permettre à une application web externe (comme celle sur Vercel)
- * d'appeler cette API.
- */
-function doOptions(e) {
-  return ContentService.createTextOutput()
-    .setHeader('Access-Control-Allow-Origin', '*') // Permet à n'importe quel domaine d'appeler l'API
-    .setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
-    .setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    .setMimeType(ContentService.MimeType.JSON)
+    .setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN)
+    .setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    .setHeader('Access-control-Allow-Headers', 'Content-Type');
 }
 
 /**

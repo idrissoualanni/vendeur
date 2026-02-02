@@ -157,7 +157,7 @@
     <div class="loader" id="loader"><div class="loader-spinner"></div></div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxgZ2CeRpEPbo3ejHaFehQ-SQYsXVyYNiLcPzRD7fLlGmBYTe9T1cklB2W79GrmU2mkeA/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJHyhRfUTYkCNWegCUPLKW-13IbZbzrRvpDTeOJNa_fK3X5TPojeBFRk3P_TrI-frq0g/exec";
         const LOADER = document.getElementById('loader');
         const ERROR_MESSAGE_DIV = document.getElementById('errorMessage');
 
@@ -218,6 +218,73 @@
             ERROR_MESSAGE_DIV.textContent = message;
             ERROR_MESSAGE_DIV.style.display = 'block';
         }
+    </script>
+    <script>
+        /**
+         * ============================================================================================
+         *  EXEMPLE DE REQUÊTE FETCH SIMPLE POUR ILLUSTRATION
+         * ============================================================================================
+         * Ce script est un exemple simple pour montrer comment appeler votre API Google Apps Script.
+         * Votre page contient déjà une logique plus complète, mais cet exemple est utile à des fins de test et de compréhension.
+         * 
+         * Pour tester :
+         * 1. Ouvrez la console de votre navigateur (F12 ou Clic droit > Inspecter > Console).
+         * 2. Rafraîchissez la page.
+         * 3. Vous devriez voir dans la console la tentative de connexion et soit une réponse de succès (si les identifiants sont bons)
+         *    soit une erreur gérée (ex: "Email ou mot de passe incorrect.").
+         * 
+         * Grâce aux corrections CORS effectuées dans "app script.js", cette requête ne devrait plus être bloquée par le navigateur.
+         */
+        async function testAdminLogin() {
+            // L'URL de déploiement de votre Web App Google Apps Script.
+            const googleScriptUrl = "https://script.google.com/macros/s/AKfycbwJHyhRfUTYkCNWegCUPLKW-13IbZbzrRvpDTeOJNa_fK3X5TPojeBFRk3P_TrI-frq0g/exec";
+
+            // Les données à envoyer. Pour une connexion, on a besoin de l'email et du mot de passe.
+            const loginCredentials = {
+                email: "admin@example.com", // Remplacez par un email de test
+                password: "adminpassword"   // Remplacez par le mot de passe correspondant
+            };
+
+            console.log("Tentative de connexion avec l'API Google Apps Script...", loginCredentials);
+
+            try {
+                // Envoi de la requête au backend.
+                const response = await fetch(googleScriptUrl, {
+                    method: 'POST', // On utilise la méthode POST car c'est ce que notre fonction `doPost` attend.
+                    
+                    mode: 'cors', // Indispensable pour les requêtes entre différents domaines (Vercel -> Google).
+                    
+                    headers: {
+                        // On précise que le corps de notre requête est au format JSON.
+                        'Content-Type': 'application/json',
+                    },
+                    
+                    // Le corps de la requête, qui sera reçu par `doPost(e)` dans `e.postData.contents`.
+                    body: JSON.stringify({
+                        action: 'login', // L'action que le backend doit exécuter.
+                        payload: loginCredentials // Les données nécessaires pour cette action.
+                    }),
+                });
+
+                // On attend la réponse du serveur et on la transforme en objet JavaScript.
+                const result = await response.json();
+
+                // On affiche le résultat dans la console.
+                if (result.status === 'success') {
+                    console.log("✅ Connexion réussie ! Réponse de l'API :", result);
+                } else {
+                    console.error("❌ Échec de la connexion. Réponse de l'API :", result);
+                }
+
+            } catch (error) {
+                console.error("⛔ Une erreur critique est survenue lors de la requête fetch :", error);
+                console.log("Cette erreur peut être due à un problème réseau ou à une mauvaise configuration du script côté serveur (vérifiez que vous avez bien redéployé le script Apps Script avec les modifications).");
+            }
+        }
+
+        // On exécute la fonction de test lorsque la page est chargée.
+        document.addEventListener('DOMContentLoaded', testAdminLogin);
+
     </script>
 </body>
 </html>
