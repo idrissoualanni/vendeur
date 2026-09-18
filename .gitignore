@@ -1,0 +1,1 @@
+Nothing needs to be added to the .gitignore file based on the provided changes. The added and modified files (styles.css, index.html, login-admin.html, login-vendeur.html, signup-vendeur.html) are all source code files that should be tracked by git. There are no build artifacts, dependencies, or temporary files in the changes that would require ignoring.

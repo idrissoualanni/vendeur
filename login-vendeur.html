@@ -7,154 +7,108 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
     <style>
-        :root {
-            --primary-color: #F97924;
-            --primary-hover-color: #E86A14;
-            --surface-color: #FFFFFF;
-            --background-color: #F8F9FA;
-            --text-color-primary: #212529;
-            --text-color-secondary: #6C757D;
-            --border-color: #DEE2E6;
-            --error-color: #DC3545;
-            --font-family: 'Inter', sans-serif;
-            --border-radius: 8px;
-            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-        }
-        body {
-            font-family: var(--font-family);
-            background-color: var(--background-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .auth-page {
             min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 1rem;
-            margin:0;
         }
-        .auth-container {
+        
+        .auth-card {
             width: 100%;
-            max-width: 450px;
-            background: var(--surface-color);
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            border: 1px solid var(--border-color);
+            max-width: 480px;
         }
-        .auth-header {
+        
+        .auth-logo {
+            height: 56px;
+            margin-bottom: 1.5rem;
+            transition: transform var(--transition-slow);
+        }
+        
+        .auth-logo:hover {
+            transform: scale(1.05);
+        }
+        
+        .auth-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
             text-align: center;
-            padding: 2.5rem 2rem 1rem;
         }
-        .auth-header img {
-            height: 50px;
-            margin-bottom: 1rem;
+        
+        .auth-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
         }
-        .auth-header h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin: 0;
-        }
-        .auth-content { padding: 2rem; }
-        .form-grid { display: grid; gap: 1.25rem; }
-        .form-group { display: flex; flex-direction: column; }
-        label { margin-bottom: 0.5rem; font-weight: 500; font-size: 0.875rem; }
-        input {
-            padding: 0.85rem 1rem;
-            border-radius: var(--border-radius);
-            border: 1px solid var(--border-color);
-            font-size: 1rem;
-        }
-        input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(249, 121, 36, 0.25);
-        }
-        button[type="submit"] {
-            width: 100%;
-            padding: 0.85rem;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 1rem;
-            margin-top: 1.5rem;
-            transition: background-color 0.2s;
-        }
-        button[type="submit"]:hover { background-color: var(--primary-hover-color); }
+        
         .auth-footer {
             text-align: center;
-            padding: 1.5rem;
-            background: #F8F9FA;
+            padding-top: 1.5rem;
+            margin-top: 1.5rem;
             border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
             font-size: 0.9rem;
         }
-        .auth-footer a { color: var(--primary-color); font-weight: 600; text-decoration: none; }
-        .auth-footer a:hover { text-decoration: underline; }
-        .error-message {
-            color: var(--error-color);
-            background-color: rgba(220, 53, 69, 0.1);
-            border: 1px solid rgba(220, 53, 69, 0.2);
-            padding: 0.75rem 1rem;
-            border-radius: var(--border-radius);
-            font-size: 0.9rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            display: none;
+        
+        .auth-footer a {
+            font-weight: 600;
+            color: var(--primary-color);
         }
-        .loader {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.8); z-index: 9999;
-            justify-content: center; align-items: center;
+        
+        .auth-footer a:hover {
+            text-decoration: underline;
         }
-        .loader.active { display: flex; }
-        .loader-spinner {
-            border: 5px solid #f3f3f3; border-top: 5px solid var(--primary-color);
-            border-radius: 50%; width: 50px; height: 50px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        @media (max-width: 480px) {
-            .auth-header {
-                padding: 2rem 1.5rem 1rem;
-            }
-            .auth-content {
-                padding: 1.5rem;
-            }
+        
+        .btn-submit {
+            width: 100%;
+            margin-top: 1rem;
         }
     </style>
 </head>
 <body>
-
-    <div class="auth-container">
-        <div class="auth-header">
-            <a href="index.html"><img src="https://miadmarket.com/wp-content/uploads/2023/10/logo-miad-market.png" alt="Logo MiadMarket"></a>
-            <h1>Espace Vendeur</h1>
-        </div>
-
-        <div class="auth-content">
-            <div id="errorMessage" class="error-message"></div>
-            <form id="loginForm">
-                <div class="form-grid">
+    
+    <div class="auth-page">
+        <div class="auth-card card fade-in">
+            <div class="card-body">
+                <a href="index.html">
+                    <img src="https://miadmarket.com/wp-content/uploads/2023/10/logo-miad-market.png" alt="Logo MiadMarket" class="auth-logo">
+                </a>
+                <h1 class="auth-title">Espace Vendeur</h1>
+                <p class="auth-subtitle">Connectez-vous pour accéder à votre tableau de bord</p>
+                
+                <div id="errorMessage" class="alert alert-error" style="display: none;"></div>
+                
+                <form id="loginForm">
                     <div class="form-group">
-                        <label for="loginEmail">Email</label>
-                        <input type="email" id="loginEmail" required>
+                        <label for="loginEmail" class="form-label">Email</label>
+                        <input type="email" id="loginEmail" class="form-input" placeholder="votre@email.com" required>
                     </div>
+                    
                     <div class="form-group">
-                        <label for="loginPassword">Mot de passe</label>
-                        <input type="password" id="loginPassword" required>
+                        <label for="loginPassword" class="form-label">Mot de passe</label>
+                        <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
                     </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-submit">
+                        Se connecter
+                    </button>
+                </form>
+                
+                <div class="auth-footer">
+                    Pas encore de compte ? <a href="signup-vendeur.html">Inscrivez-vous</a>
                 </div>
-                <button type="submit">Se connecter</button>
-            </form>
-        </div>
-
-        <div class="auth-footer">
-            Pas encore de compte ? <a href="signup-vendeur.html">Inscrivez-vous</a>
+            </div>
         </div>
     </div>
 
-    <div class="loader" id="loader"><div class="loader-spinner"></div></div>
+    <div class="loader-overlay" id="loader">
+        <div class="loader-spinner"></div>
+    </div>
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMD7mJlo8YG4rNq6rEXvV17a5sUg2GDl7hUSjSsX6ktulHC11lOaXG-wL3IGLzYbLSbQ/exec";
@@ -195,7 +149,6 @@
             try {
                 const result = await postToApi('login', { email, password });
                 
-                // Vérifier que le rôle est bien celui d'un vendeur
                 if (result.user.role !== 'Représentant') {
                     showError("Accès refusé. Cet espace est réservé aux vendeurs.");
                     return;

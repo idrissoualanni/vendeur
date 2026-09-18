@@ -6,121 +6,125 @@
     <title>Bienvenue - Espace Partenaire MiadMarket</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
     <style>
-        :root {
-            --primary-color: #F97924;
-            --primary-hover-color: #E86A14;
-            --surface-color: #FFFFFF;
-            --background-color: #F8F9FA;
-            --text-color-primary: #212529;
-            --text-color-secondary: #6C757D;
-            --border-color: #DEE2E6;
-            --font-family: 'Inter', sans-serif;
-            --border-radius: 12px;
-            --box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.1);
-        }
-        body {
-            font-family: var(--font-family);
-            background-color: var(--background-color);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .landing-page {
             min-height: 100vh;
-            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
         }
-        .landing-container {
+        
+        .landing-card {
             text-align: center;
-            background: var(--surface-color);
-            padding: 4rem 3rem;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            border: 1px solid var(--border-color);
-            max-width: 600px;
+            max-width: 640px;
             width: 100%;
         }
-        .landing-container img {
-            height: 60px;
-            margin-bottom: 1.5rem;
+        
+        .landing-logo {
+            height: 72px;
+            margin-bottom: 2rem;
+            transition: transform var(--transition-slow);
         }
-        h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text-color-primary);
-            margin: 0 0 1rem 0;
+        
+        .landing-logo:hover {
+            transform: scale(1.05);
         }
-        p {
-            font-size: 1.1rem;
-            color: var(--text-color-secondary);
-            margin-bottom: 2.5rem;
-            line-height: 1.6;
+        
+        .landing-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-500) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
+        
+        .landing-subtitle {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+            line-height: 1.8;
+        }
+        
         .button-group {
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 1.25rem;
         }
-        .btn {
-            display: block;
-            padding: 1rem 1.5rem;
-            border-radius: var(--border-radius);
-            border: 2px solid transparent;
-            font-size: 1.1rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.3s ease;
+        
+        .btn-landing {
+            padding: 1.25rem 2rem;
+            font-size: 1.05rem;
+            position: relative;
+            overflow: hidden;
         }
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
+        
+        .btn-landing::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
         }
-        .btn-primary:hover {
-            background-color: var(--primary-hover-color);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        
+        .btn-landing:hover::before {
+            left: 100%;
         }
-        .btn-secondary {
-            background-color: transparent;
-            color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-        .btn-secondary:hover {
-            background-color: var(--primary-color);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        @media (max-width: 576px) {
-            .landing-container {
-                padding: 3rem 1.5rem;
+        
+        @media (max-width: 640px) {
+            .landing-page {
+                padding: 1rem;
             }
-            h1 {
-                font-size: 1.75rem;
+            
+            .landing-title {
+                font-size: 2rem;
             }
-            p {
-                font-size: 1rem;
-            }
+            
             .button-group {
                 grid-template-columns: 1fr;
             }
-        }
-        @media (min-width: 576px) {
-            .button-group {
-                grid-template-columns: 1fr 1fr;
+            
+            .landing-logo {
+                height: 56px;
             }
         }
     </style>
 </head>
 <body>
-
-    <div class="landing-container">
-        <img src="https://miadmarket.com/wp-content/uploads/2023/10/logo-miad-market.png" alt="Logo MiadMarket">
-        <h1>Espace Partenaire</h1>
-        <p>Bienvenue sur le portail de gestion de MiadMarket. Connectez-vous pour gérer vos produits ou administrer la plateforme.</p>
-        <div class="button-group">
-            <a href="login-vendeur.html" class="btn btn-primary">Vendeur</a>
-            <a href="login-admin.html" class="btn btn-secondary">Espace Admin</a>
+    
+    <div class="landing-page">
+        <div class="landing-card card fade-in">
+            <div class="card-body">
+                <img src="https://miadmarket.com/wp-content/uploads/2023/10/logo-miad-market.png" alt="Logo MiadMarket" class="landing-logo">
+                <h1 class="landing-title">Espace Partenaire</h1>
+                <p class="landing-subtitle">
+                    Bienvenue sur le portail de gestion de MiadMarket.<br>
+                    Connectez-vous pour gérer vos produits ou administrer la plateforme.
+                </p>
+                <div class="button-group">
+                    <a href="login-vendeur.html" class="btn btn-primary btn-landing">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        Vendeur
+                    </a>
+                    <a href="login-admin.html" class="btn btn-secondary btn-landing">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        Espace Admin
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
